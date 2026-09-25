@@ -1,10 +1,14 @@
-FROM nginx:1.27-alpine
+FROM node:22-slim
 
-# Static replica: no build step, no dependencies to install, nothing to fetch.
-COPY environment/nginx.conf /etc/nginx/conf.d/default.conf
-COPY index.html styles.css app.js state_to_state_migration_normalized.csv /usr/share/nginx/html/
-COPY vendor/ /usr/share/nginx/html/vendor/
+WORKDIR /srv/app
 
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev
+
+COPY index.html styles.css app.js server.js state_to_state_migration_normalized.csv ./
+COPY vendor/ ./vendor/
+
+ENV PORT=8901
 EXPOSE 8901
 
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["node", "server.js"]

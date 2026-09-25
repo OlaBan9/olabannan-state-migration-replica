@@ -4,8 +4,11 @@
   "private": true,
   "description": "1:1 replica of the US state-to-state migration dot-flow visualization (static site, no dependencies).",
   "scripts": {
-    "start": "python3 -m http.server 8791",
+    "start": "node server.js",
     "dev": "python3 -m http.server 5173",
     "test": "node --test tests/site-check.mjs"
+  },
+  "engines": {
+    "node": ">=22"
   }
 }

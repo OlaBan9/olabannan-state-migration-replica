@@ -40,7 +40,7 @@ no backend) that reproduces the original's full experience:
   controls left behind.
 - WebCraft 2.0 contract is part of done: `site.toml` with
   `category = "webcraft-2.0"`, single-service `docker-compose.yml`, `app.toml`
-  with start command, port 8901, and health `/`, nginx front door on
+  with start command, port 8901, and health `/`, node-server front door on
   0.0.0.0, and `verify.sh` with `--plan`, dev, and `--prod` profiles.
 
 ## Verify before calling it done

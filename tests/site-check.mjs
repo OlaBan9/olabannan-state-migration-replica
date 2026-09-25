@@ -17,11 +17,12 @@ const read = (p) => readFileSync(join(ROOT, p), 'utf8');
 
 test('required submission files exist and are non-empty', () => {
   for (const f of [
-    'index.html', 'styles.css', 'app.js',
+    'index.html', 'styles.css', 'app.js', 'server.js',
+    'package.json', 'package-lock.json', '.env.example',
     'state_to_state_migration_normalized.csv',
     'vendor/d3.min.js', 'vendor/topojson-client.min.js', 'vendor/states-10m.json',
     'site.toml', 'app.toml', 'docker-compose.yml', 'environment/Dockerfile',
-    'environment/nginx.conf', 'verify.sh',
+    'verify.sh',
     'PRD.md', 'features.json', 'instruction.md', 'SETUP.md',
     'THIRD_PARTY_NOTICES.md',
   ]) {

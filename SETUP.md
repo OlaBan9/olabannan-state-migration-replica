@@ -18,7 +18,7 @@ cd olabannan-state-migration-replica
 ```
 
 Open `http://localhost:8901/`. Both profiles serve the identical vendored
-file set through nginx; there is no dev server and no build step.
+file set through the zero-dependency server.js; there is no dev server and no build step.
 
 Quick static preview without Docker:
 
@@ -58,7 +58,7 @@ The map, flow rendering, and interaction code (`app.js`, `styles.css`,
 
 ## Deployment
 
-The container serves static files from nginx on port 8901 with health path
+The container serves static files from server.js on port 8901 with health path
 `/`. Deployment metadata is maintained in `site.toml`; the operational
 contract (single service, start command, port, health) in `app.toml` and
 `docker-compose.yml`.

@@ -5,7 +5,7 @@
 #   ./verify.sh          # dev profile: compose build + up, then health check
 #   ./verify.sh --prod   # production profile: plain `docker build` + `docker run`, then health check
 #
-# The replica is a dependency-free static site served by nginx, so both
+# The replica is a dependency-free static site served by server.js, so both
 # profiles serve the identical file set; there is no dev server and no build
 # step that could diverge between profiles. Setup needs zero live fetch:
 # all JS libraries, map geometry, and the dataset are vendored in the repo.
@@ -32,7 +32,7 @@ wait_for_health() {
 
 plan() {
   cat <<EOF
-plan: olabannan-state-migration-replica (static site + nginx, port ${PORT}, health /)
+plan: olabannan-state-migration-replica (static page + node server.js, port ${PORT}, health /)
   dev:  docker compose up --build -d   # single service: app
         curl -fsS $URL                  # health check
   prod: docker build -f environment/Dockerfile -t ${PROD_IMAGE} .

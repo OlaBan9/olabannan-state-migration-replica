@@ -7,6 +7,8 @@ tags = ["data-visualization", "d3", "responsive", "static"]
 
 [site.tech]
 stack = ["html", "css", "javascript", "d3"]
+hosting = "aws"
+hosting_access_granted = true
 
 [site.assets]
 data = ["state_to_state_migration_normalized.csv", "vendor/states-10m.json"]
@@ -32,3 +34,4 @@ side = "replica"
 [task]
 workstream = "web_craft"
 format = "web_craft"
+track_assignment = "hatch-web-design"

@@ -35,4 +35,4 @@ Quick local preview without Docker: `python3 -m http.server 8791`
 - `vendor/` — vendored D3, topojson-client, and us-atlas geometry.
   No CDN, no registry, no network fetch at setup or runtime.
 - `site.toml` / `app.toml` / `docker-compose.yml` / `environment/` / `verify.sh` —
-  WebCraft 2.0 operational contract (single service, nginx on 0.0.0.0:8901, health `/`).
+  WebCraft 2.0 operational contract (single service, node server.js on 0.0.0.0:8901, health `/`).

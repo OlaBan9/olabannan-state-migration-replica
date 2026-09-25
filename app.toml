@@ -2,8 +2,10 @@
 name = "olabannan-state-migration-replica"
 port = 8901
 health = "/"
+start = "node server.js"
+test = "npm test"
 
 [app.production]
-start = "nginx -g 'daemon off;'"
+start = "node server.js"
 port = 8901
 health = "/"
