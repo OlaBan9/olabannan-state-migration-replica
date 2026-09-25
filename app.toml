@@ -1,0 +1,9 @@
+[app]
+name = "olabannan-state-migration-replica"
+port = 8901
+health = "/"
+
+[app.production]
+start = "nginx -g 'daemon off;'"
+port = 8901
+health = "/"

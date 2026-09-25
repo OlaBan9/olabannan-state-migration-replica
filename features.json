@@ -1,0 +1,35 @@
+{
+  "site": "olabannan-state-migration-replica",
+  "rubrics": [
+    {
+      "id": 1,
+      "criterion": "The initial desktop view shows the full-viewport US map with state boundaries and abbreviation labels carrying animated volume-weighted dot-flow arcs, with the frosted control panel open on the left showing the US State-to-State Migration title, Minimize toggle, volume-weighted sub copy, live year/period/state/direction/corridor status line, and default badges of latest year, P1/12, 180 corridors, 1.6x density, and 1.0x speed.",
+      "type": "design",
+      "priority": "must-have"
+    },
+    {
+      "id": 2,
+      "criterion": "The Year slider scrubs every data year with the badge, status line, arcs, stats, and ranking following; Play toggles to Pause and advances one year each time the period counter wraps past P12/12, looping after the last year, while the period badge cycles P1/12 through P12/12 driving the dot-density pulse.",
+      "type": "CUJ",
+      "priority": "must-have"
+    },
+    {
+      "id": 3,
+      "criterion": "State dropdown, direction modes (In + Out, Outflow Only, Inflow Only with both-swatch legend), corridor count 30-320, dot density 0.5-2.8x, and dot speed 0.6-2.2x all recompute arcs, the six stat cards (visible migrants, corridors, inflow, outflow, signed green/red net, year total), and the top-10 ranking live; Reset Filters restores all defaults and clears focus.",
+      "type": "CUJ",
+      "priority": "must-have"
+    },
+    {
+      "id": 4,
+      "criterion": "Hovering a state boundary or ranking row shows its in/out/net detail in the context line; clicking either focuses that corridor while the rest dim to 35% and the row takes the active treatment, clicking again or Clear Focus restores; drag pans, scroll zooms, Reset Map View refits the nation; impossible filter combinations show the no-corridors message with zeroed stats.",
+      "type": "CUJ",
+      "priority": "must-have"
+    },
+    {
+      "id": 5,
+      "criterion": "The light cartographic theme (water #e7edf2, state fill #f8f9fa, accent #2f6ea3, inflow/outflow lane split) with Segoe UI type, pill badges, two-column stat cards, and volume-bar ranking rows holds at 1440px desktop and 390px mobile where the same panel overlays the same map without page scroll; Minimize collapses to title plus Expand, ?export=1 hides the panel for capture, and a favicon is present.",
+      "type": "design",
+      "priority": "must-have"
+    }
+  ]
+}

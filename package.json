@@ -1,0 +1,10 @@
+{
+  "name": "olabannan-state-migration-replica",
+  "version": "1.0.0",
+  "private": true,
+  "description": "1:1 replica of the US state-to-state migration dot-flow visualization (static site, no dependencies).",
+  "scripts": {
+    "start": "python3 -m http.server 8791",
+    "dev": "python3 -m http.server 5173"
+  }
+}

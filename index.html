@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>US Migration Dot Flows</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23213142'/%3E%3Cpath d='M8 22 Q15 9 24 13' stroke='%23f2f4f6' stroke-width='2' fill='none'/%3E%3Ccircle cx='8' cy='22' r='3.2' fill='%237fd4c1'/%3E%3Ccircle cx='24' cy='13' r='3.2' fill='%23e8a2b0'/%3E%3C/svg%3E" />
+  <script src="./vendor/d3.min.js"></script>
+  <script src="./vendor/topojson-client.min.js"></script>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="stage" id="stage">
+    <svg id="mapBase" class="layer"></svg>
+    <canvas id="flowCanvas" class="layer"></canvas>
+    <svg id="mapOverlay" class="layer"></svg>
+  </div>
+  <aside class="panel">
+    <div class="titleRow">
+      <h1>US State-to-State Migration</h1>
+      <button id="panelToggleBtn" class="panelToggle" type="button" aria-expanded="true">Minimize</button>
+    </div>
+    <div id="panelBody" class="panelBody">
+      <p class="sub">Dot arcs are volume-weighted: higher migration creates thicker bands and denser dot flow.</p>
+      <p id="status" class="status">Loading map + migration data...</p>
+      <p id="contextLine" class="status context">Hover a state or corridor for detail.</p>
+      <div class="ctl"><label for="yearSlider">Year <span id="yearBadge" class="badge">-</span> <span id="periodBadge" class="badge">P1/12</span></label><input id="yearSlider" type="range" min="0" max="0" value="0" step="1" /></div>
+      <div class="row"><button id="playBtn" type="button">Play</button><button id="resetBtn" type="button">Reset Filters</button><button id="clearCorridorBtn" type="button">Clear Focus</button></div>
+      <div class="ctl"><button id="resetViewBtn" type="button">Reset Map View</button></div>
+      <div class="ctl"><label for="stateSelect">State</label><select id="stateSelect"></select></div>
+      <div class="ctl"><label for="modeSelect">Direction</label><select id="modeSelect"><option value="both">In + Out</option><option value="out">Outflow Only</option><option value="in">Inflow Only</option></select></div>
+      <div class="dirLegend"><span class="sw in">Inflow</span><span class="sw out">Outflow</span></div>
+      <div class="ctl"><label for="topNSlider">Visible Corridors <span id="topNBadge" class="badge">180</span></label><input id="topNSlider" type="range" min="30" max="320" value="180" step="10" /></div>
+      <div class="ctl"><label for="densitySlider">Dot Density <span id="densityBadge" class="badge">1.6x</span></label><input id="densitySlider" type="range" min="0.5" max="2.8" value="1.6" step="0.1" /></div>
+      <div class="ctl"><label for="speedSlider">Dot Speed <span id="speedBadge" class="badge">1.0x</span></label><input id="speedSlider" type="range" min="0.6" max="2.2" value="1.0" step="0.1" /></div>
+      <section class="stats">
+        <article class="stat"><h4>Visible Migrants (Annual)</h4><p id="visibleMigrants">-</p></article>
+        <article class="stat"><h4>Visible Corridors</h4><p id="visibleCorridors">-</p></article>
+        <article class="stat"><h4>Inflow (Annual)</h4><p id="inflowValue">-</p></article>
+        <article class="stat"><h4>Outflow (Annual)</h4><p id="outflowValue">-</p></article>
+        <article id="netCard" class="stat"><h4>Net (Annual)</h4><p id="netValue">-</p></article>
+        <article class="stat"><h4>Total Year Volume (Annual)</h4><p id="yearVolumeValue">-</p></article>
+      </section>
+      <section class="corr"><h3>Top Visible Corridors (Annual)</h3><ol id="topCorridors"></ol></section>
+      <p class="hint">Drag to pan, scroll to zoom, click state boundaries to focus. Inflow and outflow are split onto different arc lanes to reduce overlap.</p>
+    </div>
+  </aside>
+  <script src="./app.js"></script>
+</body>
+</html>
