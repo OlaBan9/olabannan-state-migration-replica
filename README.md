@@ -7,7 +7,7 @@
 ```bash
 cd olabannan-state-migration-replica
 ./verify.sh --plan   # dry run
-./verify.sh          # dev profile: compose build + up, health check (port 8080)
+./verify.sh          # dev profile: compose build + up, health check (port 8901)
 ./verify.sh --prod   # production profile: docker build + run, health check
 # open http://localhost:8901/
 ```
