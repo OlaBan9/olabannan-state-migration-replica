@@ -3,14 +3,13 @@
 ## Product Overview
 
 A single-page interactive data visualization of US state-to-state migration. A
-full-viewport D3 map of the United States carries animated canvas dot-flow arcs
+full-viewport map of the United States carries animated canvas dot-flow arcs
 between states, and a floating control panel exposes the year scrubber,
 playback, filters, live statistics, and a clickable corridor ranking.
 
-The experience is a functional replica of the original migration-flow page: one
+The experience is a single-view migration-flow page: one
 route (`/`), no accounts, no backend. All rendering is client-side; the only
-data is a vendored Census-sourced CSV plus vendored D3, topojson-client, and
-us-atlas geometry. There are no placeholder states — every control is live.
+data is a vendored Census-sourced CSV plus vendored map geometry. There are no placeholder states — every control is live.
 
 ## Audience and Core Journey
 
@@ -174,8 +173,7 @@ The panel is an `aside` fixed over the map, open by default:
 - Drag pans (bounded translate extent), wheel/pinch zooms; double-click zoom
   is disabled so rapid corridor clicking never jumps the view.
 - `Reset Map View` returns to the fitted nation view with a 240ms ease.
-- Geometry comes from the vendored us-atlas `states-10m.json` via
-  topojson-client; no tile server, no network.
+- Map geometry is vendored with the page; no tile server, no network.
 
 ### URL states
 
@@ -205,7 +203,7 @@ The panel is an `aside` fixed over the map, open by default:
   has a panel-side equivalent (active row, badges, stats).
 - Touch: panel controls are full-width rows; the map remains pannable around
   the panel on small screens.
-- No motion-preference switch exists in the original; none is added.
+- There is no motion-preference switch.
 
 ## Acceptance Criteria
 
@@ -236,7 +234,5 @@ The panel is an `aside` fixed over the map, open by default:
   - Minimize collapses to title + Expand and expands back
   - `?export=1` (and `?ui=0`, `?panel=0`) hides the panel with map unaffected
 - Determinism and isolation:
-  - `./verify.sh --plan` dry-runs; `./verify.sh` and `./verify.sh --prod`
-    both boot clean and pass health on two consecutive runs
   - Zero external requests at setup or runtime (libraries, geometry, and
     dataset all vendored)
