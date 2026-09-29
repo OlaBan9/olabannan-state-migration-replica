@@ -58,9 +58,11 @@ The visual language is a light cartographic theme with a frosted control panel.
 
 - Three stacked layers: base SVG (nation + state fills), canvas (dot arcs,
   pointer-transparent), overlay SVG (boundaries, labels, hover targets).
-- Dot arcs are volume-weighted: higher migration renders thicker bands with
-  denser dot flow. Inflow and outflow ride separate arc lanes to reduce
-  overlap. Dots fade along motion trails.
+- Band width and particle count both scale with corridor volume, so a heavier
+  corridor reads as a wider, busier arc.
+- Inflow and outflow occupy offset lanes rather than sharing a path, keeping
+  reciprocal pairs legible where they overlap.
+- Particles leave a fading trail along the arc.
 - Non-focused corridors dim to 35% opacity while a focus is active.
 
 ### Branding
@@ -105,31 +107,10 @@ small screens, the panel simply overlays more of the map:
   all detected years and defaults to the latest. Status line reports
   `Loaded {rows} usable rows across {years} years` once parsed.
 
-### Panel copy (exact)
+### Number formatting
 
-- Title: `US State-to-State Migration`; toggle: `Minimize` / `Expand`.
-- Sub: `Dot arcs are volume-weighted: higher migration creates thicker bands and denser dot flow.`
-- Loading: `Loading map + migration data...`
-- Context default: `Hover a state or corridor for detail.`
-- Status pattern: `{year} (P{n}/12) | {All states|State} | {IN + OUT|IN|OUT} | {N} visible corridors`
-  (e.g. `2024 (P1/12) | All states | IN + OUT | 180 visible corridors`).
-- Buttons: `Play` / `Pause`, `Reset Filters`, `Clear Focus`, `Reset Map View`.
-- Labels: `Year`, `State`, `Direction`, `Visible Corridors`, `Dot Density`,
-  `Dot Speed`.
-- Direction options in order: `In + Out`, `Outflow Only`, `Inflow Only`;
-  legend: `Inflow`, `Outflow`.
-- Slider defaults: corridors 180 (range 30–320, step 10), density 1.6x
-  (0.5–2.8, step 0.1), speed 1.0x (0.6–2.2, step 0.1).
-- Stat cards in order: `Visible Migrants (Annual)`, `Visible Corridors`,
-  `Inflow (Annual)`, `Outflow (Annual)`, `Net (Annual)`, `Total Year Volume (Annual)`.
-  Compact notation applies (e.g. `3.5M`, `7.1M`); net carries a sign (`+0`).
-- Ranking heading: `Top Visible Corridors (Annual)`. Row pattern:
-  `[FLOW|IN|OUT] {from} -> {to}: {value}/yr`
-  (e.g. `[FLOW] California -> Texas: 77,161/yr`). Empty state:
-  `No corridors visible for this filter.`
-- Hint: `Drag to pan, scroll to zoom, click state boundaries to focus. Inflow and outflow are split onto different arc lanes to reduce overlap.`
-- State hover detail pattern:
-  `{name} | In {in}/yr | Out {out}/yr | Net {±net}/yr`.
+- Counts use compact notation (e.g. `3.5M`, `7.1M`); net values carry an
+  explicit sign (`+0`). Per-year rates are suffixed `/yr`.
 
 ## Product Surfaces
 
@@ -140,7 +121,7 @@ The panel is an `aside` fixed over the map, open by default:
 - Title row: heading plus `Minimize` button (`aria-expanded` true). Minimizing
   collapses to title plus `Expand`; the map keeps animating underneath.
 - Right after load the panel shows the latest year selected, the period badge
-  at P1/12, corridor badge 180, density 1.6x, speed 1.0x, and computed stats.
+  at P1/12, the slider defaults below on their badges, and computed stats.
 - Year slider scrubs all data years; Play toggles to Pause and advances one
   year each time the period counter wraps past P12/12, looping back to the
   first year after the last; the slider thumb follows. Pause freezes on the
@@ -151,8 +132,9 @@ The panel is an `aside` fixed over the map, open by default:
   legend below it always shows both swatches.
 - Corridor slider keeps the top N flows by value (30–320). Density and speed
   sliders rescale particle count and velocity live without rebuilding routes.
-- Reset Filters restores year to latest, state to all, direction to both,
-  corridors to 180, density to 1.6x, speed to 1.0x, and clears focus/hover.
+- Reset Filters restores all six defaults — year to latest, state to all,
+  direction to both, and the three sliders to the values below — then clears
+  focus and hover.
 - Stats recompute on every change: visible migrants, visible corridor count,
   inflow, outflow, signed net (green/red tint), and total year volume.
 - Ranking lists the top 10 visible corridors with a volume bar scaled to the
@@ -161,6 +143,27 @@ The panel is an `aside` fixed over the map, open by default:
   treatment, other corridors dim); clicking again unfocuses.
 - `Clear Focus` drops any corridor focus. Empty result sets show the
   no-corridors message in place of rows.
+
+Exact copy:
+
+- Title: `US State-to-State Migration`; toggle: `Minimize` / `Expand`.
+- Sub: `Dot arcs are volume-weighted: higher migration creates thicker bands and denser dot flow.`
+- Context default: `Hover a state or corridor for detail.`
+- Status pattern: `{year} (P{n}/12) | {All states|State} | {IN + OUT|IN|OUT} | {N} visible corridors`
+  (e.g. `2024 (P1/12) | All states | IN + OUT | 180 visible corridors`).
+- Buttons: `Play` / `Pause`, `Reset Filters`, `Clear Focus`.
+- Labels: `Year`, `State`, `Direction`, `Visible Corridors`, `Dot Density`,
+  `Dot Speed`.
+- Direction options in order: `In + Out`, `Outflow Only`, `Inflow Only`;
+  legend: `Inflow`, `Outflow`.
+- Slider defaults: corridors 180 (range 30–320, step 10), density 1.6x
+  (0.5–2.8, step 0.1), speed 1.0x (0.6–2.2, step 0.1).
+- Stat cards in order: `Visible Migrants (Annual)`, `Visible Corridors`,
+  `Inflow (Annual)`, `Outflow (Annual)`, `Net (Annual)`, `Total Year Volume (Annual)`.
+- Ranking heading: `Top Visible Corridors (Annual)`. Row pattern:
+  `[FLOW|IN|OUT] {from} -> {to}: {value}/yr`
+  (e.g. `[FLOW] California -> Texas: 77,161/yr`). Empty state:
+  `No corridors visible for this filter.`
 
 ### Map
 
@@ -174,6 +177,13 @@ The panel is an `aside` fixed over the map, open by default:
   is disabled so rapid corridor clicking never jumps the view.
 - `Reset Map View` returns to the fitted nation view with a 240ms ease.
 - Map geometry is vendored with the page; no tile server, no network.
+
+Exact copy:
+
+- Button: `Reset Map View`.
+- Hint: `Drag to pan, scroll to zoom, click state boundaries to focus. Inflow and outflow are split onto different arc lanes to reduce overlap.`
+- State hover detail pattern:
+  `{name} | In {in}/yr | Out {out}/yr | Net {±net}/yr`.
 
 ### URL states
 
