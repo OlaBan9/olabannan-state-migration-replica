@@ -17,6 +17,7 @@ scripts = ["vendor/d3.min.js", "vendor/topojson-client.min.js"]
 [site.prd]
 file = "PRD.md"
 setup = "SETUP.md"
+walkthrough_video = "https://pxl.cl/dMMQP"
 backend = "No backend. Dependency-free static page; D3/topojson/us-atlas libraries, map geometry, and the Census migration CSV are all vendored locally. Zero network fetch at setup or runtime."
 
 [[screenshots]]
