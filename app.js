@@ -16,8 +16,15 @@
   const PERIOD_MS = 450;
   const RANKING_SIZE = 10;
   const DIM_ALPHA = 0.35;
-  const DOT_ALPHA = 0.7;
-  const TRAIL_GHOSTS = 4;
+  const HEAD_ALPHA = 0.75;
+  const TRAIL_ALPHA = 0.16;
+  const HEAD_PX = 5; // bright streak length
+  const TRAIL_PX = 34; // faint trail behind it
+  // Corridor hues, weighted toward cool greens and teals with a few warm accents.
+  const FLOW_PALETTE = [
+    '#3f8f77', '#2f8a86', '#4a9a8a', '#358f9c', '#3f86a6', '#4f7fa8', '#46957f',
+    '#6f9a3f', '#5e8a3c', '#7fa04a', '#3e4f86', '#5b4a8e', '#b0607a',
+  ];
   const RESET_VIEW_MS = 240;
   const LOADED_NOTICE_MS = 1400;
 
@@ -59,7 +66,7 @@
   const model = {
     years: [], byYear: new Map(), yearIndex: 0, period: 0, playing: false,
     ...DEFAULTS,
-    focus: null, // { type: 'corridor', key } | { type: 'state', name }
+    focusKey: null, // corridor key picked from the ranking
     hoverKey: null,
     visible: [], ready: false, live: false,
   };
@@ -161,7 +168,7 @@
     ui.canvas.height = Math.round(height * ratio);
     ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
 
-    geo.projection = d3.geoAlbersUsa().fitExtent([[0, height * 0.08], [width, height * 0.975]], geo.nation);
+    geo.projection = d3.geoAlbersUsa().fitExtent([[0, height * 0.031], [width, height * 0.966]], geo.nation);
     geo.path = d3.geoPath(geo.projection);
     geo.centroids.clear();
     for (const feature of geo.features) {
@@ -181,10 +188,16 @@
       .data(geo.features)
       .join('path')
       .attr('class', 'state-edge')
+      .attr('d', geo.path);
+    // Only the borders are interactive: a wide invisible stroke along each one.
+    hitView.selectAll('.state-hit')
+      .data(geo.features)
+      .join('path')
+      .attr('class', 'state-hit')
       .attr('d', geo.path)
       .on('pointerenter', (_, feature) => hoverState(feature.properties.name))
       .on('pointerleave', () => hoverState(null))
-      .on('click', (_, feature) => toggleStateFocus(feature.properties.name));
+      .on('click', (_, feature) => toggleStateFilter(feature.properties.name));
     hitView.selectAll('.state-tag')
       .data(geo.features.filter((f) => geo.centroids.has(f.properties.name) && POSTAL[f.properties.name]))
       .join('text')
@@ -195,7 +208,6 @@
 
     lanes.clear();
     syncLanes();
-    paintStateFocus();
   }
 
   // ---------------------------------------------------------------- corridor lanes and particles
@@ -210,7 +222,7 @@
     const length = Math.hypot(dx, dy) || 1;
     const nx = -dy / length;
     const ny = dx / length;
-    const bend = Math.min(length * 0.22, 90);
+    const bend = Math.min(length * 0.3, 140);
     return { x0, y0, x1, y1, cx: (x0 + x1) / 2 + nx * bend, cy: (y0 + y1) / 2 + ny * bend, nx, ny, length };
   }
 
@@ -226,8 +238,7 @@
   function corridorColor(corridor) {
     if (corridor.kind === 'IN') return INFLOW_COLOR;
     if (corridor.kind === 'OUT') return OUTFLOW_COLOR;
-    const hue = (hashString(corridor.from) % 360);
-    return d3.hcl(hue, 34, 50).formatHex();
+    return FLOW_PALETTE[hashString(corridor.key) % FLOW_PALETTE.length];
   }
 
   function hashString(text) {
@@ -251,7 +262,7 @@
         lane = { ...laneGeometry(from, to), width: 0, particles: [] };
         lanes.set(corridor.key, lane);
       }
-      Object.assign(lane, { corridor, share, color: corridorColor(corridor), targetWidth: 1.2 + 9 * Math.sqrt(share) });
+      Object.assign(lane, { corridor, share, color: corridorColor(corridor), targetWidth: 2 + 12 * Math.sqrt(share) });
     }
     for (const key of lanes.keys()) if (!keep.has(key)) lanes.delete(key);
   }
@@ -261,13 +272,11 @@
   }
 
   function isLit(lane) {
-    if (!model.focus) return true;
-    if (model.focus.type === 'corridor') return lane.corridor.key === model.focus.key;
-    return lane.corridor.from === model.focus.name || lane.corridor.to === model.focus.name;
+    return !model.focusKey || lane.corridor.key === model.focusKey;
   }
 
   function stepParticles(lane, seconds) {
-    const wanted = Math.max(1, Math.round((2 + 16 * Math.pow(lane.share, 0.6)) * model.density * pulse()));
+    const wanted = Math.max(1, Math.round((2 + 14 * Math.pow(lane.share, 0.6)) * model.density * pulse()));
     while (lane.particles.length < wanted) {
       lane.particles.push({ t: Math.random(), offset: (Math.random() - 0.5), pace: 0.8 + Math.random() * 0.4 });
     }
@@ -282,6 +291,20 @@
     }
   }
 
+  // Strokes one segment per particle, `length` px long and ending at its head.
+  function strokeParticles(lane, length) {
+    const span = length / Math.max(lane.length, 1);
+    ctx.beginPath();
+    for (const particle of lane.particles) {
+      const offset = particle.offset * lane.width;
+      const [tx, ty] = pointOnLane(lane, Math.max(0, particle.t - span), offset);
+      const [hx, hy] = pointOnLane(lane, particle.t, offset);
+      ctx.moveTo(tx, ty);
+      ctx.lineTo(hx, hy);
+    }
+    ctx.stroke();
+  }
+
   function drawFlows(seconds) {
     const { width, height } = ui.canvas.getBoundingClientRect();
     const ratio = window.devicePixelRatio || 1;
@@ -289,26 +312,21 @@
     ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
     ctx.clearRect(0, 0, width, height);
     ctx.setTransform(ratio * k, 0, 0, ratio * k, ratio * x, ratio * y);
+    ctx.lineCap = 'round';
 
-    const dotRadius = 1.05 / Math.sqrt(k);
+    const lineScale = 1 / Math.sqrt(k);
     for (const lane of lanes.values()) {
       lane.width += (lane.targetWidth - lane.width) * Math.min(1, seconds * 6);
       stepParticles(lane, seconds);
-      const lit = isLit(lane);
+      const strength = isLit(lane) ? 1 : DIM_ALPHA;
       const hovered = lane.corridor.key === model.hoverKey;
-      ctx.fillStyle = lane.color;
-      for (const particle of lane.particles) {
-        // A short fading streak: the head plus three ghosts behind it.
-        for (let ghost = 0; ghost < TRAIL_GHOSTS; ghost += 1) {
-          const t = particle.t - ghost * 0.007;
-          if (t <= 0) continue;
-          const [px, py] = pointOnLane(lane, t, particle.offset * lane.width);
-          ctx.globalAlpha = (lit ? DOT_ALPHA : DIM_ALPHA * DOT_ALPHA) * (1 - ghost / TRAIL_GHOSTS);
-          ctx.beginPath();
-          ctx.arc(px, py, hovered ? dotRadius * 1.6 : dotRadius, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      }
+      ctx.strokeStyle = lane.color;
+      ctx.globalAlpha = TRAIL_ALPHA * strength;
+      ctx.lineWidth = 1.4 * lineScale;
+      strokeParticles(lane, TRAIL_PX);
+      ctx.globalAlpha = HEAD_ALPHA * strength;
+      ctx.lineWidth = (hovered ? 3.4 : 2.2) * lineScale;
+      strokeParticles(lane, HEAD_PX);
     }
     ctx.globalAlpha = 1;
   }
@@ -386,35 +404,25 @@
 
   function paintLeaderFocus() {
     for (const item of ui.leaders.querySelectorAll('.leader[data-key]')) {
-      const [from, to] = item.dataset.key.split('>');
-      const active = model.focus?.type === 'corridor'
-        ? model.focus.key === item.dataset.key
-        : model.focus?.type === 'state' && (from === model.focus.name || to === model.focus.name);
-      item.classList.toggle('is-active', Boolean(active));
+      item.classList.toggle('is-active', item.dataset.key === model.focusKey);
     }
-  }
-
-  function paintStateFocus() {
-    ui.hit.selectAll('.state-edge')
-      .classed('is-focused', (f) => model.focus?.type === 'state' && model.focus.name === f.properties.name);
   }
 
   // Recomputes everything that depends on the filters or the year.
   function refresh() {
     if (!model.ready) return;
     model.visible = selectCorridors();
-    if (model.focus?.type === 'corridor' && !model.visible.some((c) => c.key === model.focus.key)) model.focus = null;
+    if (model.focusKey && !model.visible.some((c) => c.key === model.focusKey)) model.focusKey = null;
     syncLanes();
     renderStatus();
     renderTiles(summarize(model.visible));
     renderLeaders();
-    paintStateFocus();
   }
 
   // ---------------------------------------------------------------- interactions
 
+  // Hovering a border only reports that state's totals in the detail line.
   function hoverState(name) {
-    ui.hit.selectAll('.state-edge').classed('is-hovered', (f) => f.properties.name === name);
     if (!name || !model.ready) {
       ui.detail.textContent = 'Hover a state or corridor for detail.';
       return;
@@ -424,23 +432,22 @@
   }
 
   function toggleCorridorFocus(key) {
-    model.focus = model.focus?.type === 'corridor' && model.focus.key === key ? null : { type: 'corridor', key };
+    model.focusKey = model.focusKey === key ? null : key;
     paintLeaderFocus();
-    paintStateFocus();
   }
 
-  function toggleStateFocus(name) {
-    model.focus = model.focus?.type === 'state' && model.focus.name === name ? null : { type: 'state', name };
-    paintLeaderFocus();
-    paintStateFocus();
+  // Clicking a border selects that state in the State filter; clicking it again returns to all states.
+  function toggleStateFilter(name) {
+    model.state = model.state === name ? '' : name;
+    ui.state.value = model.state;
+    refresh();
   }
 
   function clearFocus() {
-    model.focus = null;
+    model.focusKey = null;
     model.hoverKey = null;
     ui.detail.textContent = 'Hover a state or corridor for detail.';
     paintLeaderFocus();
-    paintStateFocus();
   }
 
   function setPlaying(playing) {

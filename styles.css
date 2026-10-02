@@ -81,23 +81,20 @@ body {
 }
 
 .state-edge {
-  fill: transparent;
+  fill: none;
   stroke: #9fa9b3;
   stroke-width: 0.7;
   vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+
+.state-hit {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 7;
+  vector-effect: non-scaling-stroke;
+  pointer-events: stroke;
   cursor: pointer;
-}
-
-.state-edge:hover,
-.state-edge.is-hovered {
-  fill: #2f6ea312;
-  stroke: var(--accent);
-  stroke-width: 1.4;
-}
-
-.state-edge.is-focused {
-  stroke: var(--accent);
-  stroke-width: 1.8;
 }
 
 .state-tag {

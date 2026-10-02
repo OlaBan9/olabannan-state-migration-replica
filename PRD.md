@@ -3,14 +3,13 @@
 ## Product Overview
 
 A single-page interactive data visualization of US state-to-state migration. A
-full-viewport D3 map of the United States carries animated canvas dot-flow arcs
+full-viewport map of the United States carries animated dot-flow arcs
 between states, and a floating control panel exposes the year scrubber,
 playback, filters, live statistics, and a clickable corridor ranking.
 
-The experience is a functional replica of the original migration-flow page: one
-route (`/`), no accounts, no backend. All rendering is client-side; the only
-data is a vendored Census-sourced CSV plus vendored D3, topojson-client, and
-us-atlas geometry. There are no placeholder states — every control is live.
+The experience is a single page (`/`) with no accounts or sign-in. It covers
+Census state-to-state migration for every available year and needs no network
+access once loaded. There are no placeholder states — every control is live.
 
 ## Audience and Core Journey
 
@@ -27,9 +26,10 @@ The core journey is short:
    sub-year periods.
 3. Filter by state and direction, trim the corridor count, or tune dot density
    and speed, and watch the arcs, statistics, and ranking recompute live.
-4. Hover a state or corridor for its detail line; click a state boundary or a
-   ranking row to focus one corridor while the rest dim; clear the focus to
-   restore the full flow field.
+4. Hover a state border or a corridor for its detail line; click a state
+   border to filter to that state (click it again to return to all states),
+   or click a ranking row to focus one corridor while the rest dim; clear the
+   focus to restore the full flow field.
 5. Pan and zoom the map freely, then reset the view.
 
 ## Global Design System
@@ -57,8 +57,8 @@ The visual language is a light cartographic theme with a frosted control panel.
 
 ### Map and flow rendering
 
-- Three stacked layers: base SVG (nation + state fills), canvas (dot arcs,
-  pointer-transparent), overlay SVG (boundaries, labels, hover targets).
+- Moving dots pass over the state fills, while state borders and postal labels
+  stay crisp on top of them; the dots never block hovering or clicking borders.
 - Band width and particle count both scale with corridor volume, so a heavier
   corridor reads as a wider, busier arc.
 - Inflow and outflow occupy offset lanes rather than sharing a path, keeping
@@ -132,7 +132,8 @@ The panel is an `aside` fixed over the map, open by default:
 - Direction dropdown filters to both flows, outflow only, or inflow only; the
   legend below it always shows both swatches.
 - Corridor slider keeps the top N flows by value (30–320). Density and speed
-  sliders rescale particle count and velocity live without rebuilding routes.
+  sliders rescale particle count and velocity live without changing which
+  corridors are shown.
 - Reset Filters restores all six defaults — year to latest, state to all,
   direction to both, and the three sliders to the values below — then clears
   focus and hover.
@@ -171,14 +172,15 @@ Exact copy:
 - US states with postal-abbreviation labels; District of Columbia, Puerto
   Rico, and territories included in geometry; labels stay legible over flow
   via a white halo.
-- Hovering a state boundary emphasizes it and shows its in/out/net detail in
-  the context line; clicking toggles a state-scoped focus equivalent to the
-  ranking click.
+- Hovering near a state border shows that state's in/out/net detail in the
+  context line; the map itself does not change. Clicking a border selects that
+  state in the State filter, exactly like choosing it from the dropdown;
+  clicking the same border again returns to all states.
 - Drag pans (bounded translate extent), wheel/pinch zooms; double-click zoom
   is disabled so rapid corridor clicking never jumps the view.
 - `Reset Map View` returns to the fitted nation view with a 240ms ease.
-- Geometry comes from the vendored us-atlas `states-10m.json` via
-  topojson-client; no tile server, no network.
+- State shapes ship with the page; the map never loads tiles or other remote
+  imagery.
 
 Exact copy:
 
@@ -210,12 +212,12 @@ Exact copy:
 - All controls are native inputs, selects, and buttons — keyboard reachable
   with visible accent focus by default; ranking rows are list items with
   click handlers and hover equivalents on the map itself.
-- Canvas flow is decorative motion over an SVG map whose state boundaries are
-  the interactive targets; every canvas-only effect (focus dimming, pulses)
-  has a panel-side equivalent (active row, badges, stats).
+- The moving dots are decorative; state borders are the interactive map
+  targets, and every dot-only effect (focus dimming, pulses) has a panel-side
+  equivalent (active row, badges, stats).
 - Touch: panel controls are full-width rows; the map remains pannable around
   the panel on small screens.
-- No motion-preference switch exists in the original; none is added.
+- There is no separate reduced-motion switch; playback can be paused at any time.
 
 ## Acceptance Criteria
 
@@ -237,9 +239,11 @@ Exact copy:
   - Corridor/density/speed sliders update badges and rendering live
   - Reset Filters restores all six defaults and clears focus
 - Focus and map:
-  - Hovering a state or ranking row shows its detail in the context line
-  - Clicking a state boundary or ranking row focuses it and dims the rest;
-    clicking again unfocuses; Clear Focus restores
+  - Hovering a state border or ranking row shows its detail in the context line
+  - Clicking a state border filters to that state; clicking it again returns
+    to all states
+  - Clicking a ranking row focuses that corridor and dims the rest; clicking
+    again or Clear Focus restores
   - Drag pans, scroll zooms, Reset Map View refits the nation
   - Impossible filter combination shows the empty message with zeroed stats
 - Panel and URL:

@@ -21,7 +21,7 @@
     },
     {
       "id": 4,
-      "criterion": "Hovering a state boundary or ranking row shows its in/out/net detail in the context line; clicking either focuses that corridor while the rest dim to 35% and the row takes the active treatment, clicking again or Clear Focus restores; drag pans, scroll zooms, Reset Map View refits the nation; impossible filter combinations show the no-corridors message with zeroed stats.",
+      "criterion": "Hovering a state border or ranking row shows its in/out/net detail in the context line; clicking a state border filters to that state and clicking it again returns to all states; clicking a ranking row focuses that corridor while the rest dim to 35% and the row takes the active treatment, and clicking again or Clear Focus restores; drag pans, scroll zooms, Reset Map View refits the nation; impossible filter combinations show the no-corridors message with zeroed stats.",
       "type": "CUJ",
       "priority": "must-have"
     },
