@@ -1,50 +1,104 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>US Migration Dot Flows</title>
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23213142'/%3E%3Cpath d='M8 22 Q15 9 24 13' stroke='%23f2f4f6' stroke-width='2' fill='none'/%3E%3Ccircle cx='8' cy='22' r='3.2' fill='%237fd4c1'/%3E%3Ccircle cx='24' cy='13' r='3.2' fill='%23e8a2b0'/%3E%3C/svg%3E" />
-  <script src="./vendor/d3.min.js"></script>
-  <script src="./vendor/topojson-client.min.js"></script>
-  <link rel="stylesheet" href="./styles.css" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>US State-to-State Migration</title>
+  <meta name="description" content="Animated dot-flow map of migration between US states, year by year.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23e7edf2'/%3E%3Cpath d='M7 22 Q16 4 25 18' fill='none' stroke='%232f6ea3' stroke-width='2.4' stroke-dasharray='1 3.2' stroke-linecap='round'/%3E%3Ccircle cx='7' cy='22' r='3' fill='%234f7597'/%3E%3Ccircle cx='25' cy='18' r='3' fill='%239a6d4f'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <div class="stage" id="stage">
-    <svg id="mapBase" class="layer"></svg>
-    <canvas id="flowCanvas" class="layer"></canvas>
-    <svg id="mapOverlay" class="layer"></svg>
+    <svg class="stage-layer" id="land-layer" aria-hidden="true"></svg>
+    <canvas class="stage-layer stage-layer--flows" id="flow-layer" aria-hidden="true"></canvas>
+    <svg class="stage-layer" id="hit-layer" role="img" aria-label="Map of US states; hover or click a state to inspect its migration"></svg>
   </div>
-  <aside class="panel">
-    <div class="titleRow">
-      <h1>US State-to-State Migration</h1>
-      <button id="panelToggleBtn" class="panelToggle" type="button" aria-expanded="true">Minimize</button>
-    </div>
-    <div id="panelBody" class="panelBody">
-      <p class="sub">Dot arcs are volume-weighted: higher migration creates thicker bands and denser dot flow.</p>
-      <p id="status" class="status">Loading map + migration data...</p>
-      <p id="contextLine" class="status context">Hover a state or corridor for detail.</p>
-      <div class="ctl"><label for="yearSlider">Year <span id="yearBadge" class="badge">-</span> <span id="periodBadge" class="badge">P1/12</span></label><input id="yearSlider" type="range" min="0" max="0" value="0" step="1" /></div>
-      <div class="row"><button id="playBtn" type="button">Play</button><button id="resetBtn" type="button">Reset Filters</button><button id="clearCorridorBtn" type="button">Clear Focus</button></div>
-      <div class="ctl"><button id="resetViewBtn" type="button">Reset Map View</button></div>
-      <div class="ctl"><label for="stateSelect">State</label><select id="stateSelect"></select></div>
-      <div class="ctl"><label for="modeSelect">Direction</label><select id="modeSelect"><option value="both">In + Out</option><option value="out">Outflow Only</option><option value="in">Inflow Only</option></select></div>
-      <div class="dirLegend"><span class="sw in">Inflow</span><span class="sw out">Outflow</span></div>
-      <div class="ctl"><label for="topNSlider">Visible Corridors <span id="topNBadge" class="badge">180</span></label><input id="topNSlider" type="range" min="30" max="320" value="180" step="10" /></div>
-      <div class="ctl"><label for="densitySlider">Dot Density <span id="densityBadge" class="badge">1.6x</span></label><input id="densitySlider" type="range" min="0.5" max="2.8" value="1.6" step="0.1" /></div>
-      <div class="ctl"><label for="speedSlider">Dot Speed <span id="speedBadge" class="badge">1.0x</span></label><input id="speedSlider" type="range" min="0.6" max="2.2" value="1.0" step="0.1" /></div>
-      <section class="stats">
-        <article class="stat"><h4>Visible Migrants (Annual)</h4><p id="visibleMigrants">-</p></article>
-        <article class="stat"><h4>Visible Corridors</h4><p id="visibleCorridors">-</p></article>
-        <article class="stat"><h4>Inflow (Annual)</h4><p id="inflowValue">-</p></article>
-        <article class="stat"><h4>Outflow (Annual)</h4><p id="outflowValue">-</p></article>
-        <article id="netCard" class="stat"><h4>Net (Annual)</h4><p id="netValue">-</p></article>
-        <article class="stat"><h4>Total Year Volume (Annual)</h4><p id="yearVolumeValue">-</p></article>
+
+  <aside class="console" id="console" aria-labelledby="console-title">
+    <header class="console-head">
+      <h1 id="console-title">US State-to-State Migration</h1>
+      <button type="button" class="btn btn--small" id="collapse-btn" aria-expanded="true" aria-controls="console-body">Minimize</button>
+    </header>
+
+    <div class="console-body" id="console-body">
+      <p class="lede">Dot arcs are volume-weighted: higher migration creates thicker bands and denser dot flow.</p>
+      <p class="readout" id="status-line" role="status">Loading map + migration data...</p>
+      <p class="readout readout--muted" id="detail-line">Hover a state or corridor for detail.</p>
+
+      <div class="control">
+        <div class="control-row">
+          <label for="year-input">Year</label>
+          <span class="chip" id="year-chip">–</span>
+          <span class="chip" id="period-chip">P1/12</span>
+        </div>
+        <input type="range" id="year-input" min="0" max="0" step="1" value="0">
+      </div>
+
+      <div class="button-grid">
+        <button type="button" class="btn" id="play-btn">Play</button>
+        <button type="button" class="btn" id="reset-filters-btn">Reset Filters</button>
+        <button type="button" class="btn" id="clear-focus-btn">Clear Focus</button>
+        <button type="button" class="btn btn--wide" id="reset-view-btn">Reset Map View</button>
+      </div>
+
+      <div class="control">
+        <label for="state-input">State</label>
+        <select id="state-input">
+          <option value="">All States</option>
+        </select>
+      </div>
+
+      <div class="control">
+        <label for="direction-input">Direction</label>
+        <select id="direction-input">
+          <option value="both">In + Out</option>
+          <option value="out">Outflow Only</option>
+          <option value="in">Inflow Only</option>
+        </select>
+        <ul class="key" aria-label="Dot colors">
+          <li><span class="key-dot key-dot--in"></span>Inflow</li>
+          <li><span class="key-dot key-dot--out"></span>Outflow</li>
+        </ul>
+      </div>
+
+      <div class="control">
+        <div class="control-row">
+          <label for="corridor-input">Visible Corridors</label>
+          <span class="chip" id="corridor-chip">180</span>
+        </div>
+        <input type="range" id="corridor-input" min="30" max="320" step="10" value="180">
+      </div>
+
+      <div class="control">
+        <div class="control-row">
+          <label for="density-input">Dot Density</label>
+          <span class="chip" id="density-chip">1.6x</span>
+        </div>
+        <input type="range" id="density-input" min="0.5" max="2.8" step="0.1" value="1.6">
+      </div>
+
+      <div class="control">
+        <div class="control-row">
+          <label for="speed-input">Dot Speed</label>
+          <span class="chip" id="speed-chip">1.0x</span>
+        </div>
+        <input type="range" id="speed-input" min="0.6" max="2.2" step="0.1" value="1">
+      </div>
+
+      <dl class="tiles" id="stat-tiles"></dl>
+
+      <section class="leaders" aria-labelledby="leaders-title">
+        <h2 id="leaders-title">Top Visible Corridors (Annual)</h2>
+        <ol class="leader-list" id="leader-list"></ol>
       </section>
-      <section class="corr"><h3>Top Visible Corridors (Annual)</h3><ol id="topCorridors"></ol></section>
-      <p class="hint">Drag to pan, scroll to zoom, click state boundaries to focus. Inflow and outflow are split onto different arc lanes to reduce overlap.</p>
+
+      <p class="footnote">Drag to pan, scroll to zoom, click state boundaries to focus. Inflow and outflow are split onto different arc lanes to reduce overlap.</p>
     </div>
   </aside>
-  <script src="./app.js"></script>
+
+  <script src="vendor/d3.min.js"></script>
+  <script src="vendor/topojson-client.min.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
